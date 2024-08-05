@@ -1,0 +1,14 @@
+[package]
+name = "scalar_types"
+version = "0.1.1"
+edition = "2021"    
+authors = ["Zatarita"]
+description = "A module that wraps scalar types in an endian safe type."
+readme = "README.md"
+repository = "https://github.com/Zatarita/scalar_types"
+license = "GPL-3.0-only "
+keywords = ["parsing", "endianness", "networking"]
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]

@@ -1,0 +1,12 @@
+[package]
+name = "RE4_EFFBLOB_RUST"
+version = "1.0.0"
+edition = "2021"
+authors = ["Zatarita, JaderLink"]
+description = "Re4 EffBlob Tool"
+license = "GPL-3.0-only"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+scalar_types = { path = "scalar_types_0.1.1" }
