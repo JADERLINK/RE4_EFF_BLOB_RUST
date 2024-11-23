@@ -1,11 +1,15 @@
 # RE4_EFF_BLOB_RUST
 
-Extract and repack RE4 EFFBLOB files (RE4 2007/UHD/PS2)
+Extract and repack RE4 EFFBLOB files (RE4 2007/PS2/UHD/PS4/NS/GC/WII/XBOX360)
 
 **Translate from Portuguese Brazil**
 
 Tool destinada a extrair e recompactar arquivos .EFFBLOB, que são arquivos gerados pela tool "RE4_EFF_SPLIT_TOOL".
 <br>Aviso: Tool criada por Zatarita, fork da tool por JaderLink;
+
+**Update V.1.1.0**
+<br>Adicionado suporte para as versões de GC, WII e X360;
+<br>Nota: para essas 3 versões é usado o arquivo .EFFBLOBBIG, em vez do .EFFBLOB;
 
 ## Extract
 
@@ -49,8 +53,7 @@ rustc --version
 <br>cargo --version
 <br>cargo 1.77.2 (e52e36006 2024-03-26)
 
------
 
 **Tool By Zatarita**
 <br>**Fork By JADERLINK**
-<br>2024-08-05
+<br>2024-11-23

@@ -3,8 +3,9 @@ use std::io::{BufRead, BufReader, Cursor, Error, ErrorKind, Read, Result, Seek, 
 use std::path::Path;
 
 pub struct TableEntry {
-    pub id: u32,
-    pub _unknown: u32,
+    pub id: u16,
+    pub _unknownA: u16,
+    pub _unknownB: u32,
 }
 
 impl TableEntry {
@@ -13,11 +14,13 @@ impl TableEntry {
         endianness: &Endian<()>,
     ) -> Option<TableEntry> {
         let id = Endian::from_stream(stream)?.cast(endianness)?;
-        let unknown = Endian::from_stream(stream)?.cast(endianness)?;
+        let unknownA= Endian::from_stream(stream)?.cast(endianness)?;
+        let unknownB= Endian::from_stream(stream)?.cast(endianness)?;
 
         Some(TableEntry {
             id,
-            _unknown: unknown,
+            _unknownA: unknownA,
+            _unknownB: unknownB,
         })
     }
 
@@ -26,15 +29,19 @@ impl TableEntry {
         stream: &mut StreamT,
         endianness: &Endian<()>,
     ) -> Result<()> {
-        let id = Endian::<u32>::new(self.id)
+        let id = Endian::<u16>::new(self.id)
             .cast(endianness)
             .ok_or(Error::new(ErrorKind::InvalidData, "Unable to cast value!"))?;
-        let unknown = Endian::<u32>::new(self._unknown)
+        let unknownA = Endian::<u16>::new(self._unknownA)
+            .cast(endianness)
+            .ok_or(Error::new(ErrorKind::InvalidData, "Unable to cast value!"))?;
+        let unknownB = Endian::<u32>::new(self._unknownB)
             .cast(endianness)
             .ok_or(Error::new(ErrorKind::InvalidData, "Unable to cast value!"))?;
 
         stream.write_all(&id.to_ne_bytes())?;
-        stream.write_all(&unknown.to_ne_bytes())?;
+        stream.write_all(&unknownA.to_ne_bytes())?;
+        stream.write_all(&unknownB.to_ne_bytes())?;
 
         Ok(())
     }
@@ -482,7 +489,7 @@ impl Effect {
         let path_random = Endian::<u8>::from_stream(stream)?.cast(endianness)?;
         let eff_type = Endian::<u8>::from_stream(stream)?.cast(endianness)?;
         let control_id = Endian::<u8>::from_stream(stream)?.cast(endianness)?;
-        let control_flag = Endian::<u16>::from_stream(stream)?.cast(endianness)?;
+        let control_flag = Endian::<u16>::from_stream(stream)?.cast(&Endian::Little(()))?;
         let control_interval = Endian::<u8>::from_stream(stream)?.cast(endianness)?;
         let control_number = Endian::<u8>::from_stream(stream)?.cast(endianness)?;
         let control_rp = Endian::<u8>::from_stream(stream)?.cast(endianness)?;
@@ -885,9 +892,10 @@ impl Effect {
         let control_id = Endian::new(self.control_id)
             .cast(endianness)
             .ok_or(Error::new(ErrorKind::InvalidData, "Unable to cast value!"))?;
-        let control_flag = Endian::new(self.control_flag)
-            .cast(endianness)
-            .ok_or(Error::new(ErrorKind::InvalidData, "Unable to cast value!"))?;
+       let control_flag = self.control_flag;
+       // let control_flag = Endian::new(self.control_flag)
+       //     .cast(endianness)
+       //     .ok_or(Error::new(ErrorKind::InvalidData, "Unable to cast value!"))?;
         let control_interval = Endian::new(self.control_interval)
             .cast(endianness)
             .ok_or(Error::new(ErrorKind::InvalidData, "Unable to cast value!"))?;
@@ -1080,7 +1088,8 @@ impl Curve {
         stream: &mut StreamT,
         endianness: &Endian<()>,
     ) -> Option<Curve> {
-        let count = Endian::<u32>::from_stream(stream)?.cast(endianness)?;
+        let count = Endian::<u16>::from_stream(stream)?.cast(endianness)?;
+        let _padding = Endian::<u16>::from_stream(stream)?.cast(endianness)?;
         let mut points = Vec::<CurvePoint>::new();
 
         for _ in 0..count {
@@ -1111,10 +1120,12 @@ impl Curve {
         stream: &mut StreamT,
         endianness: &Endian<()>,
     ) -> Result<()> {
-        let count = Endian::new(self.points.len() as u32)
+        let count : u16 = Endian::new(self.points.len() as u16)
             .cast(endianness)
             .ok_or(Error::new(ErrorKind::InvalidData, "Unable to cast value!"))?;
         stream.write_all(&count.to_ne_bytes())?;
+        let _padding : u16 = 0;
+        stream.write_all(&_padding.to_ne_bytes())?;
 
         for point in &self.points {
             let position_x = Endian::new(point.point.0)
@@ -1285,6 +1296,7 @@ impl Eff {
         let offsets = Eff::load_offsets(stream, endianness)?;
 
         // Read element count
+        stream.seek(SeekFrom::Start(*offset as u64)).ok()?;
         let id_count = Endian::<u32>::from_stream(stream)?.cast(endianness)?;
 
         // Allocate memory
@@ -2035,7 +2047,7 @@ impl Eff {
         file.write(b"# RE4_EFF_BLOB_RUST\n")?;
         file.write(b"# Tool By Zatarita\n")?;
         file.write(b"# Fork By JADERLINK\n")?;
-        file.write(b"# Version 1.0.0")?;
+        file.write(b"# Version 1.1.0")?;
 
      Ok(())
     }
@@ -2073,8 +2085,8 @@ impl Eff {
                     result.reserve(count as usize);
                 }
                 _ => {
-                    let id = u32::from_str_radix(&value[2..], 16).ok()?;
-                    result.push(TableEntry { id, _unknown: 0 });
+                    let id = u16::from_str_radix(&value[2..], 16).ok()?;
+                    result.push(TableEntry { id, _unknownA: 0, _unknownB: 0 });
                 }
             }
         }
